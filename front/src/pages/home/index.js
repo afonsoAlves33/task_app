@@ -12,14 +12,19 @@ function Home() {
   const handleSubmit = async (event) => {
     event.preventDefault();
     try {
-      const response = await axios.post('http://127.0.0.1:8000/api/users/', {
+      const response = await axios.post('http://127.0.0.1:8000/users/', {
         username,
         email,
       });
       console.log('Usuário cadastrado:', response.data);
-      setMsn('Cadastro concluído com sucesso!!!')
-      setUsername('');
-      setEmail('');
+      if(response.status === 201){
+        setMsn('Cadastro concluído com sucesso!!!')
+        setUsername('');
+        setEmail('');
+      }
+      else{
+        setMsn('Não foi possível cadastrar, tente novamente mais tarde')
+      }
     } catch (error) {
       console.log("Username: ", username)
       console.log("Email: ", email)

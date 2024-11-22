@@ -21,6 +21,9 @@ class UserUpdate(BaseModel):
     username: Optional[str] = None
     email: Optional[str] = None
 
+class UserGet(BaseModel):
+    username: str
+    email: str
 
 # tasks 
 class Priority(str, Enum):

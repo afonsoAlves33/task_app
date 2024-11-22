@@ -8,39 +8,40 @@ import { Link } from 'react-router-dom';
 const TaskForm = () => {
   const [usuarios, setUsuarios] = useState([]);
   const [formData, setFormData] = useState({
-    usuario: "",
-    descricao: "",
-    setor: "",
-    prioridade: "baixa",
+    username: "",
+    description: "",
+    sector: "",
+    priority: "baixa",
     status: "a_fazer",
   });
 
   // Carrega a lista de usuários da API quando o componente é montado
   useEffect(() => {
-    axios.get("http://localhost:8000/api/users/")
+    axios.get("http://localhost:8000/users/")
       .then(response => setUsuarios(response.data))
       .catch(error => console.error("Erro ao carregar usuários:", error));
   }, []);
 
-  // Função para lidar com mudanças nos campos do formulário
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
     
   };
 
+
   // Função para enviar os dados do formulário para a API
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log("Dados enviados:", formData)
-    axios.post("http://localhost:8000/api/tasks/", formData)
+    axios.post("http://localhost:8000/tasks/", formData)
       .then(response => {
         alert("Tarefa cadastrada com sucesso!");
         setFormData({
-          usuario: "",
-          descricao: "",
-          setor: "",
-          prioridade: "baixa",
+          username: "",
+          description: "",
+          sector: "",
+          priority: "baixa",
           status: "a_fazer",
         });
       })
@@ -62,10 +63,10 @@ const TaskForm = () => {
       <form onSubmit={handleSubmit}>
         <div>
           <label>Usuário:</label>
-          <select name="usuario" value={formData.usuario} onChange={handleChange} required>
+          <select name="usuario" value={formData.username} onChange={handleChange} required>
             <option value="">Selecione um usuário</option>
             {usuarios.map(user => (
-              <option key={user.id} value={user.id}>{user.username}</option>
+              <option key={user.username} value={user.username}>{user.username}</option>
             ))}
           </select>
         </div>

@@ -1,4 +1,4 @@
-from app.db.database import DATABASE_URL, engine
+from db.database import DATABASE_URL, engine
 from sqlalchemy.exc import OperationalError
 
 
