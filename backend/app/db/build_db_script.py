@@ -1,11 +1,16 @@
 from db.database import DATABASE_URL, engine
 from sqlalchemy.exc import OperationalError
+from sqlalchemy.sql import text  # Importa o método text para comandos SQL brutos
 
 
 def main():
     try:
+        # Abre uma conexão com o banco
         with engine.connect() as connection:
-            connection.execute("CREATE DATABASE IF NOT EXISTS task_app;")
+            # Executa o comando de criação do banco
+            connection.execute(text("CREATE DATABASE IF NOT EXISTS task_app;"))
             print("Banco de dados criado com sucesso!")
+    except OperationalError as e:
+        print("Erro de conexão ou ao executar o comando SQL:", e)
     except Exception as e:
-        print(f"Erro ao criar o banco de dados: {e}")
+        print(f"Erro inesperado: {e}")

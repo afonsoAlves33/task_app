@@ -8,11 +8,11 @@ import { Link } from 'react-router-dom';
 const TaskForm = () => {
   const [usuarios, setUsuarios] = useState([]);
   const [formData, setFormData] = useState({
-    username: "",
     description: "",
-    sector: "",
+    sector_name: "",
     priority: "baixa",
     status: "a_fazer",
+    user_id: "",
   });
 
   // Carrega a lista de usuários da API quando o componente é montado
@@ -34,15 +34,15 @@ const TaskForm = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log("Dados enviados:", formData)
-    axios.post("http://localhost:8000/tasks/", formData)
+    axios.post("http://localhost:8000/tasks", formData)
       .then(response => {
         alert("Tarefa cadastrada com sucesso!");
         setFormData({
-          username: "",
           description: "",
-          sector: "",
+          sector_name: "",
           priority: "baixa",
           status: "a_fazer",
+          user_id: ""
         });
       })
       .catch(error => console.error("Erro ao cadastrar tarefa:", error));
@@ -63,24 +63,31 @@ const TaskForm = () => {
       <form onSubmit={handleSubmit}>
         <div>
           <label>Usuário:</label>
-          <select name="usuario" value={formData.username} onChange={handleChange} required>
-            <option value="">Selecione um usuário</option>
-            {usuarios.map(user => (
-              <option key={user.username} value={user.username}>{user.username}</option>
-            ))}
-          </select>
+          <select name="user_id" value={formData.user_id} onChange={handleChange} required>
+          <option value="">Selecione um usuário</option>
+          {usuarios.map(user => (
+            <option key={user.user_id} value={user.user_id}>{user.username}</option>
+          ))}
+        </select>
+
         </div>
         <div>
           <label>Descrição da Tarefa:</label>
-          <textarea name="descricao" value={formData.descricao} onChange={handleChange} required />
+          <textarea name="description" value={formData.description} onChange={handleChange} required />
         </div>
         <div>
-          <label>Setor:</label>
-          <input type="text" name="setor" value={formData.setor} onChange={handleChange} required />
-        </div>
+        <label>Setor:</label>
+        <input 
+          type="text" 
+          name="sector_name" 
+          value={formData.sector_name} 
+          onChange={handleChange} 
+          required 
+        />
+      </div>
         <div>
           <label>Prioridade:</label>
-          <select name="prioridade" value={formData.prioridade} onChange={handleChange} required>
+          <select name="priority" value={formData.priority} onChange={handleChange} required>
             <option value="baixa">Baixa</option>
             <option value="media">Média</option>
             <option value="alta">Alta</option>
@@ -96,6 +103,7 @@ const TaskForm = () => {
         </div>
         <button type="submit">Cadastrar Tarefa</button>
       </form>
+
     </div>
   );
 };

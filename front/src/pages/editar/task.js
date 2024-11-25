@@ -1,149 +1,182 @@
 import React, { useState, useEffect } from "react";
-import './styles.css';
 import axios from "axios";
-import { Link, useParams, useNavigate } from 'react-router-dom';
+import './styles.css';
 
-const TaskForm = () => {
-  const { id } = useParams(); // Pega o ID da URL
-  const [task, setTask] = useState(null); // Armazena a tarefa
-  const [loading, setLoading] = useState(true); // Controle de carregamento
-  const navigate = useNavigate(); // Para redirecionar após a edição
+const EditTaskByUser = () => {
   const [usuarios, setUsuarios] = useState([]); // Lista de usuários
+  const [tasks, setTasks] = useState([]); // Lista de tarefas do usuário selecionado
+  const [selectedUserId, setSelectedUserId] = useState(""); // Usuário selecionado
+  const [selectedTaskId, setSelectedTaskId] = useState(""); // Tarefa selecionada
   const [formData, setFormData] = useState({
-    usuario: "",
-    descricao: "",
-    setor: "",
-    prioridade: "baixa",
+    description: "",
+    sector_name: "",
+    priority: "baixa",
     status: "a_fazer",
-  });
+  }); // Dados do formulário
+  const [loadingTasks, setLoadingTasks] = useState(false); // Controle de carregamento das tarefas
 
-  // Carrega a lista de usuários da API quando o componente é montado
+  // Carrega os usuários ao montar o componente
   useEffect(() => {
-    axios.get("http://localhost:8000/api/users/")
-      .then(response => setUsuarios(response.data))
-      .catch(error => console.error("Erro ao carregar usuários:", error));
+    axios
+      .get("http://127.0.0.1:8000/users")
+      .then((response) => setUsuarios(response.data))
+      .catch((error) => console.error("Erro ao carregar usuários:", error));
   }, []);
 
-  // Carrega os dados da tarefa para edição
-  useEffect(() => {
-    const fetchTask = async () => {
-      try {
-        const response = await axios.get(`http://127.0.0.1:8000/api/tasks/${id}/`);
-        console.log('Dados da Tarefa:', response.data); // Verifique se os dados estão sendo retornados
-        const taskData = response.data;
-        setTask(taskData);
-        // Preenche o formulário com os dados da tarefa
+  // Atualiza as tarefas do usuário selecionado
+  const handleUserChange = (e) => {
+    const userId = e.target.value; // Captura diretamente o user_id
+    setSelectedUserId(userId); // Atualiza o estado com o user_id
+    setTasks([]); // Reseta as tarefas anteriores
+    setSelectedTaskId(""); // Reseta a tarefa selecionada
+  
+    if (userId) {
+      setLoadingTasks(true);
+      axios
+        .get(`http://127.0.0.1:8000/tasks/${userId}`) // Usa o user_id diretamente
+        .then((response) => setTasks(response.data)) // Atualiza a lista de tarefas
+        .catch((error) => console.error("Erro ao carregar tarefas:", error))
+        .finally(() => setLoadingTasks(false));
+    } else {
+      console.log("Sem user_id");
+    }
+  };
+  
+
+  // Atualiza o formulário com os dados da tarefa selecionada
+  const handleTaskChange = (e) => {
+    const taskId = e.target.value;
+    setSelectedTaskId(taskId);
+    if (taskId) {
+      const task = tasks.find((t) => t.id === parseInt(taskId));
+      if (task) {
         setFormData({
-          usuario: taskData.usuario || "",
-          descricao: taskData.descricao || "",
-          setor: taskData.setor || "",
-          prioridade: taskData.prioridade || "baixa",
-          status: taskData.status || "a_fazer",
+          description: task.description || "",
+          sector_name: task.sector_name || "",
+          priority: task.priority || "baixa",
+          status: task.status || "a_fazer",
         });
-        setLoading(false);
-      } catch (error) {
-        console.error('Erro ao carregar a tarefa:', error);
-        setLoading(false); // Finaliza o carregamento
       }
-    };
+    } else {
+      setFormData({
+        description: "",
+        sector_name: "",
+        priority: "baixa",
+        status: "a_fazer",
+      });
+    }
+  };
 
-    fetchTask();
-  }, [id]);
-
-  // Função para lidar com mudanças nos campos do formulário
-  const handleChange = (e) => {
+  // Lida com mudanças no formulário
+  const handleFormChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
-  // Função para enviar os dados atualizados para a API
+  // Envia os dados atualizados da tarefa
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("Dados enviados:", formData);
+    if (!selectedTaskId) {
+      alert("Selecione uma tarefa para atualizar.");
+      return;
+    }
 
-    axios.put(`http://localhost:8000/api/tasks/${id}/`, formData)
-      .then(response => {
+    axios
+      .put(`http://127.0.0.1:8000/tasks/${selectedTaskId}/`, formData)
+      .then(() => {
         alert("Tarefa atualizada com sucesso!");
-        navigate("/gerenciar-tarefas"); // Redireciona para a página de gerenciamento de tarefas
       })
-      .catch(error => {
-        console.error("Erro ao atualizar a tarefa:", error);
-        alert("Erro ao atualizar a tarefa. Tente novamente.");
+      .catch((error) => {
+        console.error("Erro ao atualizar tarefa:", error);
+        alert("Erro ao atualizar tarefa. Tente novamente.");
       });
   };
 
-  // Exibe uma mensagem de carregamento enquanto os dados estão sendo buscados
-  if (loading) {
-    return <div>Carregando...</div>;
-  }
-
   return (
     <div>
-      <header className="header">
-        <h1 className="title">Gerenciador de Tarefas</h1>
-        <nav className="nav">
-          <Link className="Link" to="/cadastro-usuarios">Cadastro de Usuários</Link>
-          <Link className="Link" to="/cadastrar-tarefas">Cadastro de Tarefas</Link>
-          <Link className="Link" to="/gerenciar-tarefas">Gerenciar Tarefas</Link>
-        </nav>
-      </header>
+      <h1>Editar Tarefa por Usuário</h1>
 
-      <h2>Editar Tarefa</h2>
-      <form onSubmit={handleSubmit}>
+      {/* Seleção de Usuário */}
+      <div>
+        <label>Usuário:</label>
+        <select value={selectedUserId} onChange={handleUserChange}>
+          <option value="">Selecione um usuário</option>
+          {usuarios.map((usuario) => (
+            <option key={usuario.user_id} value={usuario.user_id}>
+              {usuario.username} {/* Exibe o nome do usuário */}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Seleção de Tarefa */}
+      {selectedUserId && (
         <div>
-          <label>Usuário:</label>
-          <select name="usuario" value={formData.usuario} onChange={handleChange} required>
-            {usuarios.map((usuario) => (
-              <option key={usuario.id} value={usuario.id}>
-                {usuario.username}
+          <label>Tarefa:</label>
+          <select value={selectedTaskId} onChange={handleTaskChange} disabled={loadingTasks}>
+            <option value="">Selecione uma tarefa</option>
+            {tasks.map((task) => (
+              <option key={task.id} value={task.id}>
+                {task.description}
               </option>
             ))}
           </select>
         </div>
-        <div>
-          <label>Descrição da Tarefa:</label>
-          <textarea
-            name="descricao"
-            value={formData.descricao}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div>
-          <label>Setor:</label>
-          <input
-            type="text"
-            name="setor"
-            value={formData.setor}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div>
-          <label>Prioridade:</label>
-          <select
-            name="prioridade"
-            value={formData.prioridade}
-            onChange={handleChange}
-            required
-          >
-            <option value="baixa">Baixa</option>
-            <option value="media">Média</option>
-            <option value="alta">Alta</option>
-          </select>
-        </div>
-        <div>
-          <label>Status:</label>
-          <select name="status" value={formData.status} onChange={handleChange} required>
-            <option value="a_fazer">A Fazer</option>
-            <option value="fazendo">Fazendo</option>
-            <option value="pronto">Pronto</option>
-          </select>
-        </div>
-        <button type="submit">Salvar Alterações</button>
-      </form>
+      )}
+
+      {/* Formulário de Edição */}
+      {selectedTaskId && (
+        <form onSubmit={handleSubmit}>
+          <div>
+            <label>Descrição:</label>
+            <textarea
+              name="description"
+              value={formData.description}
+              onChange={handleFormChange}
+              required
+            />
+          </div>
+          <div>
+            <label>Setor:</label>
+            <input
+              type="text"
+              name="sector_name"
+              value={formData.sector_name}
+              onChange={handleFormChange}
+              required
+            />
+          </div>
+          <div>
+            <label>Prioridade:</label>
+            <select
+              name="priority"
+              value={formData.priority}
+              onChange={handleFormChange}
+              required
+            >
+              <option value="baixa">Baixa</option>
+              <option value="media">Média</option>
+              <option value="alta">Alta</option>
+            </select>
+          </div>
+          <div>
+            <label>Status:</label>
+            <select
+              name="status"
+              value={formData.status}
+              onChange={handleFormChange}
+              required
+            >
+              <option value="a_fazer">A Fazer</option>
+              <option value="fazendo">Fazendo</option>
+              <option value="pronto">Pronto</option>
+            </select>
+          </div>
+          <button type="submit">Salvar Alterações</button>
+        </form>
+      )}
     </div>
   );
 };
 
-export default TaskForm;
+export default EditTaskByUser;

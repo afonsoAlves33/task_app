@@ -7,17 +7,25 @@ const GerenciamentoDeTarefas = () => {
     const navigate = useNavigate();
     const [usuarios, setUsuarios] = useState([]);
     const [tasks, setTasks] = useState([]);
+    const [usuariosMap, setUsuariosMap] = useState({});
     const [statusOptions] = useState([
         { value: 'a_fazer', label: 'A Fazer' },
         { value: 'fazendo', label: 'Fazendo' },
         { value: 'pronto', label: 'Pronto' }
     ]);
 
-    // Função para buscar os usuários
+    // Função para buscar os usuários e criar o mapa
     const fetchUsuarios = async () => {
         try {
-            const response = await axios.get('http://127.0.0.1:8000/api/users/');
+            const response = await axios.get('http://127.0.0.1:8000/users');
             setUsuarios(response.data);
+
+            // Criar um dicionário com user_id como chave
+            const map = {};
+            response.data.forEach(user => {
+                map[user.user_id] = user.username;
+            });
+            setUsuariosMap(map);
         } catch (error) {
             console.error('Erro ao buscar usuários:', error);
         }
@@ -26,7 +34,7 @@ const GerenciamentoDeTarefas = () => {
     // Função para buscar as tarefas
     const fetchTasks = async () => {
         try {
-            const response = await axios.get('http://127.0.0.1:8000/api/tasks/');
+            const response = await axios.get('http://127.0.0.1:8000/tasks');
             setTasks(response.data);
         } catch (error) {
             console.error("Erro ao buscar as tarefas:", error);
@@ -44,24 +52,16 @@ const GerenciamentoDeTarefas = () => {
         console.log("ID da Tarefa:", taskId);
         console.log("Novo Status:", newStatus);
 
-        // Encontre a tarefa que será atualizada
         const taskToUpdate = tasks.find(task => task.id === taskId);
-
         if (!taskToUpdate) {
             console.error("Tarefa não encontrada!");
             return;
         }
 
         try {
-            // Enviar o objeto completo com o novo status
-            const updatedTask = {
-                ...taskToUpdate, // Copia todos os campos da tarefa
-                status: newStatus, // Atualiza apenas o status
-            };
+            const updatedTask = { ...taskToUpdate, status: newStatus };
+            await axios.put(`http://127.0.0.1:8000/tasks/${taskId}/`, updatedTask);
 
-            await axios.put(`http://127.0.0.1:8000/api/tasks/${taskId}/`, updatedTask);
-
-            // Atualiza a lista localmente
             setTasks(prevTasks =>
                 prevTasks.map(task =>
                     task.id === taskId ? updatedTask : task
@@ -78,7 +78,7 @@ const GerenciamentoDeTarefas = () => {
     // Função para excluir a tarefa
     const handleDeleteTask = async (taskId) => {
         try {
-            await axios.delete(`http://127.0.0.1:8000/api/tasks/del/${taskId}/`);
+            await axios.delete(`http://127.0.0.1:8000/tasks/${taskId}/`);
             setTasks(prevTasks => prevTasks.filter(task => task.id !== taskId));
             alert("Tarefa excluída com sucesso!");
         } catch (error) {
@@ -101,36 +101,29 @@ const GerenciamentoDeTarefas = () => {
             <div style={styles.gridContainer}>
                 {tasks.map((task) => (
                     <div key={task.id} style={styles.taskCard}>
-                        <h3>{task.descricao}</h3>
-                        <p><strong>Setor:</strong> {task.setor}</p>
-                        <p><strong>Prioridade:</strong> {task.prioridade}</p>
-                        <p><strong>Usuário:</strong> {task.username}</p>
-                        <p><strong>Data de Cadastro:</strong> {new Date(task.data_cadastro).toLocaleDateString()}</p>
+                        
+                        <p><strong>Usuário:</strong> {usuariosMap[task.user_id] || "Não encontrado"}</p>
+                        <p><strong>Descrição:</strong> {task.description}</p>
+                        <p><strong>Setor:</strong> {task.sector_name}</p>
+                        <p><strong>Prioridade:</strong> {task.priority}</p>
+                        <p><strong>Data de Cadastro:</strong> {new Date(task.creation_time_stamp).toLocaleDateString()}</p>
                         <button
-                            onClick={() => navigate(`/editar-tarefa/${task.id}`)} // Navega para a página de edição
+                            onClick={() => navigate(`/editar-tarefa/${task.id}`)}
                             style={styles.updateButton}
                         >
                             Editar
                         </button>
                         <button
-                            onClick={() => handleDeleteTask(task.id)} // Exclui a tarefa
+                            onClick={() => handleDeleteTask(task.id)}
                             style={styles.deleteButton}
                         >
                             Excluir
                         </button>
-                        {/* Status editável */}
                         <div style={styles.statusContainer}>
                             <label><strong>Status:</strong></label>
                             <select
-                                value={task.status} // Exibe o status atual da tarefa
-                                onChange={(e) => {
-                                    const newStatus = e.target.value;
-                                    setTasks(prevTasks =>
-                                        prevTasks.map(t =>
-                                            t.id === task.id ? { ...t, status: newStatus } : t
-                                        )
-                                    );
-                                }}
+                                value={task.status}
+                                onChange={(e) => handleStatusChange(task.id, e.target.value)}
                                 style={styles.statusDropdown}
                             >
                                 {statusOptions.map(option => (
@@ -139,13 +132,6 @@ const GerenciamentoDeTarefas = () => {
                                     </option>
                                 ))}
                             </select>
-
-                            <button
-                                onClick={() => handleStatusChange(task.id, task.status)} // Usa o status da tarefa
-                                style={styles.updateButton}
-                            >
-                                Alterar status
-                            </button>
                         </div>
                     </div>
                 ))}

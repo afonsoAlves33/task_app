@@ -52,6 +52,42 @@ def create_user(user: UserCreateSchema, db: Session = Depends(get_db)):
         "msg": "success"
     }
 
+@app.get("/users/{id}", status_code=status.HTTP_200_OK, response_model=UserGetSchema,)
+def get_user(id: int, db: Session = Depends(get_db)):
+    try:
+        user = db.query(UserModel).filter(UserModel.id == id).one_or_none()
+    except Exception as e:
+        raise HTTPException(detail="Could not fetch user with that id", status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    return user
+    
+@app.get("/users", status_code=status.HTTP_200_OK)
+def get_users(db: Session = Depends(get_db)):
+    try:
+
+        users = db.query(UserModel).all()
+
+        users_resp = [
+            {   
+                "user_id": user.id,
+                "username": user.username,
+                "email": user.email
+            }
+            for user in users
+        ]
+
+    except ValueError as ve:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Invalid status value: {ve}"
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"An unexpected error occurred: {str(e)}"
+        )
+
+    return users_resp
+
 
 @app.post("/tasks", status_code=status.HTTP_201_CREATED)
 def create_task(task: TaskCreateSchema, db: Session = Depends(get_db)):
@@ -86,17 +122,43 @@ def create_task(task: TaskCreateSchema, db: Session = Depends(get_db)):
     }
 
 
-@app.get("/users/{user_email}", status_code=status.HTTP_200_OK, response_model=UserGetSchema,)
-def get_user(user_email: str, db: Session = Depends(get_db)):
+@app.get("/tasks", status_code=status.HTTP_200_OK)
+def get_all_tasks(db: Session = Depends(get_db)):
     try:
-        user = db.query(UserModel).filter(UserModel.email == user_email).one_or_none()
+
+        tasks = db.query(TasksModel).all()
+
+        tasks_response = [
+            {
+                "id": task.id,
+                "description": task.description,
+                "sector_name": task.sector_name,
+                "priority": task.priority,
+                "status": str(task.status),  
+                "creation_time_stamp": task.creation_time_stamp,
+                "user_id": task.user_id
+                
+            }
+            for task in tasks
+        ]
+
+    except ValueError as ve:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Invalid status value: {ve}"
+        )
     except Exception as e:
-        raise HTTPException(detail="Could not fetch user with that id", status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    return user
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"An unexpected error occurred: {str(e)}"
+        )
+
+    return tasks_response
+
 
 
 @app.get("/tasks/{user_id}", status_code=status.HTTP_200_OK)
-def get_tasks(user_id: int, db: Session = Depends(get_db)):
+def get_task(user_id: int, db: Session = Depends(get_db)):
     try:
 
         tasks = db.query(TasksModel).filter(TasksModel.user_id == user_id).all()
@@ -127,38 +189,55 @@ def get_tasks(user_id: int, db: Session = Depends(get_db)):
         )
 
     return tasks_response
-    
-@app.get("/users", status_code=status.HTTP_200_OK)
-def get_users(db: Session = Depends(get_db)):
-    try:
 
-        users = db.query(UserModel).all()
 
-        users_resp = [
-            {
-                "username": user.id,
-                "email": user.email
-            }
-            for user in users
-        ]
+@app.delete("/tasks/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_task(task_id: int, db: Session = Depends(get_db)):
+    task = db.query(TasksModel).filter(TasksModel.id == task_id).one_or_none()
 
-    except ValueError as ve:
+    if not task:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Invalid status value: {ve}"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Task not found"
         )
+    
+    try:
+        db.delete(task)
+        db.commit()
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"An unexpected error occurred: {str(e)}"
+            detail=f"Could not delete task: {str(e)}"
+        )
+    
+    return {"msg": "Task deleted successfully"}
+
+
+@app.put("/tasks/{task_id}", status_code=status.HTTP_200_OK)
+def update_task(task_id: int, task: TaskCreateSchema, db: Session = Depends(get_db)):
+    existing_task = db.query(TasksModel).filter(TasksModel.id == task_id).one_or_none()
+
+    if not existing_task:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Task not found"
+        )
+    
+    try:
+        existing_task.description = task.description
+        existing_task.sector_name = task.sector_name
+        existing_task.priority = task.priority
+        existing_task.status = task.status
+        existing_task.user_id = task.user_id
+
+        db.commit()
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Could not update task: {str(e)}"
         )
 
-    return users_resp
-
-
-
-
-
+    return {"msg": "Task updated successfully"}
 
 
 
