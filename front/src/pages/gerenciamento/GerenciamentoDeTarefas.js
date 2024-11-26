@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+
 import './styles.css';
 
 const GerenciamentoDeTarefas = () => {
@@ -60,6 +61,9 @@ const GerenciamentoDeTarefas = () => {
 
         try {
             const updatedTask = { ...taskToUpdate, status: newStatus };
+
+            console.log(toString(updatedTask))
+            
             await axios.put(`http://127.0.0.1:8000/tasks/${taskId}/`, updatedTask);
 
             setTasks(prevTasks =>
@@ -89,19 +93,32 @@ const GerenciamentoDeTarefas = () => {
 
     return (
         <div>
-            <header className='header'>
-                <h1>Gerenciamento de Tarefas</h1>
-                <nav className="nav">
-                    <Link className="Link" to="#cadastro-usuarios">Cadastro de Usuários</Link>
-                    <Link className="Link" to="/cadastrar-tarefas">Cadastro de Tarefas</Link>
-                    <Link className="Link" to="/gerenciar-tarefas">Gerenciar Tarefas</Link>
-                </nav>
-            </header>
+            <header 
+    className='header' 
+    style={{
+        backgroundColor: '#4a90e2', 
+        color: '#fff', 
+        padding: '20px 40px', 
+        display: 'flex', 
+        flexDirection: 'column', 
+        alignItems: 'center', 
+        borderRadius: '8px', 
+        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)'
+    }}
+>
+    <h1 style={{ fontSize: '2.5rem' }}>Gerenciamento de Tarefas</h1>
+    <nav className="nav">
+        <Link className="Link" to="/cadastro-usuarios" style={{ margin: '10px', textDecoration: 'none', color: '#fff', fontWeight: 'bold' }}>Cadastro de Usuários</Link>
+        <Link className="Link" to="/cadastrar-tarefas" style={{ margin: '10px', textDecoration: 'none', color: '#fff', fontWeight: 'bold' }}>Cadastro de Tarefas</Link>
+        <Link className="Link" to="/gerenciar-tarefas" style={{ margin: '10px', textDecoration: 'none', color: '#fff', fontWeight: 'bold' }}>Gerenciar Tarefas</Link>
+    </nav>
+</header>
+
 
             <div style={styles.gridContainer}>
                 {tasks.map((task) => (
                     <div key={task.id} style={styles.taskCard}>
-                        
+                        <p><strong>Task ID:</strong> {task.id}</p>
                         <p><strong>Usuário:</strong> {usuariosMap[task.user_id] || "Não encontrado"}</p>
                         <p><strong>Descrição:</strong> {task.description}</p>
                         <p><strong>Setor:</strong> {task.sector_name}</p>

@@ -33,8 +33,8 @@ class Priority(str, Enum):
 
 class Status(str, Enum):
     a_fazer = "a_fazer"
-    em_andamento = "em_andamento"
-    concluido = "concluido"
+    fazendo = "fazendo"
+    pronto = "pronto"
 
 # base schema task
 class TaskBase(BaseModel):

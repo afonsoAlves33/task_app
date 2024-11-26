@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import './styles.css';
+import { Link } from 'react-router-dom';
+
 
 const EditTaskByUser = () => {
   const [usuarios, setUsuarios] = useState([]); // Lista de usuários
@@ -12,6 +14,7 @@ const EditTaskByUser = () => {
     sector_name: "",
     priority: "baixa",
     status: "a_fazer",
+    user_id: 0,
   }); // Dados do formulário
   const [loadingTasks, setLoadingTasks] = useState(false); // Controle de carregamento das tarefas
 
@@ -29,7 +32,7 @@ const EditTaskByUser = () => {
     setSelectedUserId(userId); // Atualiza o estado com o user_id
     setTasks([]); // Reseta as tarefas anteriores
     setSelectedTaskId(""); // Reseta a tarefa selecionada
-  
+
     if (userId) {
       setLoadingTasks(true);
       axios
@@ -37,11 +40,8 @@ const EditTaskByUser = () => {
         .then((response) => setTasks(response.data)) // Atualiza a lista de tarefas
         .catch((error) => console.error("Erro ao carregar tarefas:", error))
         .finally(() => setLoadingTasks(false));
-    } else {
-      console.log("Sem user_id");
     }
   };
-  
 
   // Atualiza o formulário com os dados da tarefa selecionada
   const handleTaskChange = (e) => {
@@ -55,6 +55,7 @@ const EditTaskByUser = () => {
           sector_name: task.sector_name || "",
           priority: task.priority || "baixa",
           status: task.status || "a_fazer",
+          user_id: task.user_id || 0, // Adiciona o campo user_id
         });
       }
     } else {
@@ -63,9 +64,17 @@ const EditTaskByUser = () => {
         sector_name: "",
         priority: "baixa",
         status: "a_fazer",
+        user_id: parseInt(selectedUserId) || 0, // Define o user_id como o selecionado
       });
     }
   };
+
+  function removeStatusPrefix(data) {
+    if (typeof data === 'string') {
+        return data.replace(/^Status\.\s*/, ''); // Remove "Status." do início da string
+    }
+    return data; // Retorna o dado original se não for string
+  }
 
   // Lida com mudanças no formulário
   const handleFormChange = (e) => {
@@ -80,6 +89,10 @@ const EditTaskByUser = () => {
       alert("Selecione uma tarefa para atualizar.");
       return;
     }
+    
+    formData.status = removeStatusPrefix(formData.status)
+
+    console.log("FormData: ",formData)
 
     axios
       .put(`http://127.0.0.1:8000/tasks/${selectedTaskId}/`, formData)
@@ -93,7 +106,30 @@ const EditTaskByUser = () => {
   };
 
   return (
+    
+
     <div>
+      <header 
+    className='header' 
+    style={{
+        backgroundColor: '#4a90e2', 
+        color: '#fff', 
+        padding: '20px 40px', 
+        display: 'flex', 
+        flexDirection: 'column', 
+        alignItems: 'center', 
+        borderRadius: '8px', 
+        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)'
+    }}
+>
+    <h1 style={{ fontSize: '2.5rem' }}>Gerenciamento de Tarefas</h1>
+    <nav className="nav">
+        <Link className="Link" to="/cadastro-usuarios" style={{ margin: '10px', textDecoration: 'none', color: '#fff', fontWeight: 'bold' }}>Cadastro de Usuários</Link>
+        <Link className="Link" to="/cadastrar-tarefas" style={{ margin: '10px', textDecoration: 'none', color: '#fff', fontWeight: 'bold' }}>Cadastro de Tarefas</Link>
+        <Link className="Link" to="/gerenciar-tarefas" style={{ margin: '10px', textDecoration: 'none', color: '#fff', fontWeight: 'bold' }}>Gerenciar Tarefas</Link>
+    </nav>
+</header>
+
       <h1>Editar Tarefa por Usuário</h1>
 
       {/* Seleção de Usuário */}
@@ -103,7 +139,7 @@ const EditTaskByUser = () => {
           <option value="">Selecione um usuário</option>
           {usuarios.map((usuario) => (
             <option key={usuario.user_id} value={usuario.user_id}>
-              {usuario.username} {/* Exibe o nome do usuário */}
+              {usuario.username}
             </option>
           ))}
         </select>
@@ -168,8 +204,8 @@ const EditTaskByUser = () => {
               required
             >
               <option value="a_fazer">A Fazer</option>
-              <option value="fazendo">Fazendo</option>
-              <option value="pronto">Pronto</option>
+              <option value="fazendo">fazendo</option>
+              <option value="pronto">pronto</option>
             </select>
           </div>
           <button type="submit">Salvar Alterações</button>

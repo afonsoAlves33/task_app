@@ -35,14 +35,27 @@ function Home() {
 
   return (
     <div className='containner'>
-      <header className="header">
-        <h1 className="title">Gerenciador de Tarefas</h1>
-        <nav className="nav">
-          <Link className="Link" to="#cadastro-usuarios">Cadastro de Usuários</Link>
-          <Link className="Link" to="/cadastrar-tarefas">Cadastro de Tarefas</Link>
-          <Link className="Link" to="/gerenciar-tarefas">Gerenciar Tarefas</Link>
-        </nav>
-      </header>
+      <header 
+    className='header' 
+    style={{
+        backgroundColor: '#4a90e2', 
+        color: '#fff', 
+        padding: '20px 40px', 
+        display: 'flex', 
+        flexDirection: 'column', 
+        alignItems: 'center', 
+        borderRadius: '8px', 
+        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)'
+    }}
+>
+    <h1 style={{ fontSize: '2.5rem' }}>Gerenciamento de Tarefas</h1>
+    <nav className="nav">
+        <Link className="Link" to="/cadastro-usuarios" style={{ margin: '10px', textDecoration: 'none', color: '#fff', fontWeight: 'bold' }}>Cadastro de Usuários</Link>
+        <Link className="Link" to="/cadastrar-tarefas" style={{ margin: '10px', textDecoration: 'none', color: '#fff', fontWeight: 'bold' }}>Cadastro de Tarefas</Link>
+        <Link className="Link" to="/gerenciar-tarefas" style={{ margin: '10px', textDecoration: 'none', color: '#fff', fontWeight: 'bold' }}>Gerenciar Tarefas</Link>
+    </nav>
+</header>
+
 
       <main>
         <h2>Cadastro de Usuários</h2>

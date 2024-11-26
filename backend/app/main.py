@@ -25,7 +25,7 @@ app.add_middleware(
 @app.get("/")
 def create_database():
     try:
-        main()
+        main2()
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR ,detail="Could not construct database automatically")
     return {"msg": "success"}
