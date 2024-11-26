@@ -1,0 +1,7 @@
+Rodar:
+
+Crie um terminal pro backend, execute:
+.\setup_backend.ps1
+
+Crie um terminal pro frontend, execute:
+.\setup_frontend.ps1
