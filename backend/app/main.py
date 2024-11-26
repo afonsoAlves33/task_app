@@ -212,6 +212,27 @@ def delete_task(task_id: int, db: Session = Depends(get_db)):
     
     return {"msg": "Task deleted successfully"}
 
+@app.delete("/users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_user(user_id: int, db: Session = Depends(get_db)):
+    user = db.query(UserModel).filter(UserModel.id == user_id).one_or_none()
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Task not found"
+        )
+    
+    try:
+        db.delete(user)
+        db.commit()
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Could not delete task: {str(e)}"
+        )
+    
+    return {"msg": "Task deleted successfully"}
+
 
 @app.put("/tasks/{task_id}", status_code=status.HTTP_200_OK)
 def update_task(task_id: int, task: TaskCreateSchema, db: Session = Depends(get_db)):
